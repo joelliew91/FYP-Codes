@@ -1,7 +1,16 @@
-library(MASS)                                   ## library required to generate multivariate norm rv
-library(MCMCpack)                               ## library required to generate inverse gamma rv
-library(HI) 
-sim_svvg<-function(years){
+generate_stable<-function(n,alpha,beta,gamma,delta){
+      k<-function(a){
+            1-abs(1-a)
+      }
+      phi = runif(n,min=-0.5*pi,max = 0.5*pi)
+      phi0 = -0.5*pi*beta*k(alpha)/alpha
+      w = rexp(n)
+      ans = sin(alpha*(phi-phi0))/(cos(phi)^(1/alpha))
+      ans = ans*(cos(phi-alpha*(phi-phi0))/w)^(1/alpha-1)
+      
+      return(ans*delta+gamma)
+}
+sim_svmj<-function(years){
       y = c(1)                                        ## Y0 set at 0
       vol = c(1)                                      ## Volatility at t=0 is set at 1
       delta = 1/250
@@ -10,18 +19,18 @@ sim_svvg<-function(years){
       theta = 0.8
       sigma.v = 0.1
       rho = -0.4
-      gam = -0.01
-      sigma.y = 0.4
-      v = 3.0
-      sigma = 0
+      a = 1.8
+      sigma = 3.
+      beta = -1
+      
       E = matrix(c(1,rho*sigma.v,rho*sigma.v,sigma.v^2),2,2)
-      E
+      
       epsilon = mvrnorm(years*250,mu=c(0,0),Sigma=E)  ## Generate 5000 moves ie 20yrs in the 
       ## BM of log price and volatility
+      swig = rnorm(years*250,mean = mu.y,sd = sigma.y)
+      jump = rbinom(years*250,size=1,prob = lam.y*delta)
+      J = jump*swig
       
-      epsilon.j = rnorm(years*250)                    ## Generate the Jump outcomes
-      Gamma_path = rgamma(years*250,delta/v,v)
-      J = gam*Gamma_path + sigma*sqrt(Gamma_path)*epsilon.j
       
       for(i in 1:(years*250)){
             Y = y[i] + mu*delta + sqrt(vol[i]*delta)*epsilon[i,1] + J[i]
@@ -30,7 +39,7 @@ sim_svvg<-function(years){
             vol = rbind(vol,V)
       }
       par(mfrow=c(2,1))
-      plot(y,type='l',ylab='Log Stock Price',xlab = 'Time',main='SVVG')
-      plot(exp(y),type='l',ylab='Stock Price',xlab = 'Time',main = 'Stock Price using SVVG')
+      #plot(y,type='l',ylab='Log Stock Price',xlab = 'Time',main='SVMJ')
+      #plot(exp(y),type='l',ylab='Stock Price',xlab = 'Time',main = 'Stock Price using SVMJ')
       return(list(y=y,vol=vol))
 }
