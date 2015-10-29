@@ -20,25 +20,23 @@ sim_svmj<-function(years){
       sigma.v = 0.1
       rho = -0.4
       a = 1.8
-      sigma = 3.
+      sigma = 0.3
       beta = -1
       
       E = matrix(c(1,rho*sigma.v,rho*sigma.v,sigma.v^2),2,2)
       
       epsilon = mvrnorm(years*250,mu=c(0,0),Sigma=E)  ## Generate 5000 moves ie 20yrs in the 
-      ## BM of log price and volatility
-      swig = rnorm(years*250,mean = mu.y,sd = sigma.y)
-      jump = rbinom(years*250,size=1,prob = lam.y*delta)
-      J = jump*swig
+                                                      ## BM of log price and volatility
+      log_stable_path = generate_stable(years*250,alpha=a,beta=-1,gamma=0,delta=sigma*delta^(1/a))
       
       
       for(i in 1:(years*250)){
-            Y = y[i] + mu*delta + sqrt(vol[i]*delta)*epsilon[i,1] + J[i]
+            Y = y[i] + mu*delta + sqrt(vol[i]*delta)*epsilon[i,1] + log_stable_path[i]
             V = vol[i] + k*(theta-vol[i])*delta + sigma.v*sqrt(vol[i]*delta)*epsilon[i,2]
             y = rbind(y,Y)
             vol = rbind(vol,V)
       }
-      par(mfrow=c(2,1))
+      #par(mfrow=c(2,1))
       #plot(y,type='l',ylab='Log Stock Price',xlab = 'Time',main='SVMJ')
       #plot(exp(y),type='l',ylab='Stock Price',xlab = 'Time',main = 'Stock Price using SVMJ')
       return(list(y=y,vol=vol))

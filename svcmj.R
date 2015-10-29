@@ -12,7 +12,7 @@ sim_svmj<-function(years){
       lam.y = 0.015
       mu.v = 1
       rho.j = -0.4
-      E1 = matrix(c(1,rho*sigma.v,rho*sigma.v,sigma.v^2),2,2)
+      E = matrix(c(1,rho*sigma.v,rho*sigma.v,sigma.v^2),2,2)
 
       epsilon = mvrnorm(years*250,mu=c(0,0),Sigma=E)  ## Generate 5000 moves ie 20yrs in the 
       ## BM of log price and volatility
