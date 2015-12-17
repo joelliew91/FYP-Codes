@@ -1,7 +1,7 @@
 sim_svmj<-function(years){
       y = c(1)                                        ## Y0 set at 0
       vol = c(1)                                      ## Volatility at t=0 is set at 1
-      delta = 1/250
+      delta = 1
       mu = 0.05
       k = 0.015
       theta = 0.8

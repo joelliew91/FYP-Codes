@@ -1,10 +1,9 @@
 library(MASS)                                   ## library required to generate multivariate norm rv
 library(MCMCpack)                               ## library required to generate inverse gamma rv
 library(HI) 
-sim_svvg<-function(years){
+sim_svvg<-function(years,delta=1){
       y = c(1)                                        ## Y0 set at 0
       vol = c(1)                                      ## Volatility at t=0 is set at 1
-      delta = 1/250
       mu = 0.05
       k = 0.015
       theta = 0.8
@@ -17,12 +16,16 @@ sim_svvg<-function(years){
       E = matrix(c(1,rho*sigma.v,rho*sigma.v,sigma.v^2),2,2)
       E
       epsilon = mvrnorm(years*250,mu=c(0,0),Sigma=E)  ## Generate 5000 moves ie 20yrs in the 
-      ## BM of log price and volatility
-      
+                                                      ## BM of log price and volatility
       epsilon.j = rnorm(years*250)                    ## Generate the Jump outcomes
       Gamma_path = rgamma(years*250,delta/v,v)
-      J = gam*Gamma_path + sigma*sqrt(Gamma_path)*epsilon.j
+      J = c()
       
+      for(i in Gamma_path){
+          temp = rnorm(1,mean=gam*i,sd=sigma.v*sqrt(i))
+          J = c(J,temp)
+      }
+
       for(i in 1:(years*250)){
             Y = y[i] + mu*delta + sqrt(vol[i]*delta)*epsilon[i,1] + J[i]
             V = vol[i] + k*(theta-vol[i])*delta + sigma.v*sqrt(vol[i]*delta)*epsilon[i,2]
