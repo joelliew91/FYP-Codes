@@ -7,6 +7,14 @@ post_svvg_fn_v<-function(x,para,delta){
     return(val1+val2)
 }
 
+post_svvg_fn_k<-function(x,para,S,W){
+    k = exp(x)+para$sigma.v^2/(2*para$v)
+    mn = S/W
+    var = 1/W
+    val = -(k-mn)^2/(2*var)+log(k-para$sigma.v^2/(2*para$v))
+    return(val)
+}
+
 svvg_fn_vt<-function(x){
     val1 = 0
     val2 = 0
@@ -28,9 +36,9 @@ svvg_fn_vt<-function(x){
 }
 
 
-svvg_fn_Gt<-function(x,para,delta){
-    n = delta*length(data)
-    val2 = -para$Jt[1:n-1]^2/(x*2*para$sigma^2)
+svvg_fn_Gt<-function(x,para,delta,i){
+    n = length(para$Gt)
+    val2 = -para$Jt[i]^2/(x*2*para$sigma^2)
     val1 = (delta/para$v-1.5)*log(x)
     val3 = -x*(1/para$v+para$gamma^2/(2*para$sigma^2))
     return(val1+val2+val3)

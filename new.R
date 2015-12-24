@@ -29,32 +29,36 @@ mcmc_para<-function(data,delta=1,iterations){
     gamma = rnorm(1) # para 6
     sigma = sqrt(rinvgamma(1,2.5,5)) # 1/rgamma(1,2.5,5) # para 7
     v = 1/rgamma(1,10,1/10) # para 8
-    para = list(mu=mu,k=k,theta=theta,sigma.v=sigma.v,rho=rho,gamma=gamma,sigma=sigma,v=v,vt=vt,w_v=w_v,phi=phi,Jt=Jt,Gt=Gt)
-    iter = list(theta=theta,k=k)
+    para = list(mu=mu,k=k,theta=theta,sigma.v=sigma.v,rho=rho,gamma=gamma,sigma=sigma,v=v,vt=vt,w_v=w_v,phi=phi,Jt=Jt,Gt=Gt,theta_list=theta,k_list=k,tracker = rep(0,length(Gt)))
     for(i in 1:iterations){
         
-        para$mu = get_mu(data,para,delta)     ## Update mu g
-        
-        iter$theta[i+1] = get_theta(data,para,delta)     ## Update theta g
-        iter$k[i+1] = get_k(data,para,delta)        ## Update k g
-        
-        para$theta = (para$theta*i+iter$theta[i+1])/(i+1)
-        para$k = (para$k*i+iter$k[i+1])/(i+1)
-        
+        para$mu = get_mu(data,para,delta)
+
+        para$theta_list[i+1] = get_theta(data,para,delta)
+        para$k_list[i+1] = get_k(data,para,delta)
+
+        para$theta = para$theta_list[i+1]
+        para$k = para$k_list[i+1]
         temp = get_w_v_phi(data,para,delta)
         para$w_v = temp$w_v
         para$phi = temp$phi
         para$sigma.v = sqrt(temp$w_v+temp$phi^2)
         para$rho = temp$phi/para$sigma.v
-        
         para$gamma = get_gamma(data,para,delta)
 
-        para$sigma = get_sigma(data,para,delta)   ## Update sigma ns
+        para$sigma = get_sigma(data,para,delta)
         para$v = get_v(para,delta)
-        para$Jt[2:n*delta] = get_Jt(data,para,delta)               ## Update Jt ns
-        #Gt = update_Gt(para,delta,Gt)
+        para$Jt[2:length(para$Jt)] = get_Jt(data,para,delta)
+        #temp = get_Gt(para,delta)
+        #para$Gt[2:length(para$Gt)] = temp$temp
+        #para$tracker = para$tracker+temp$t
+        para$Gt[2:length(para$Gt)] = get_Gt(para,delta)
+
     }
-    
+    #para$tracker = para$tracker/iterations
+    print(1-rejectionRate(mcmc(para$k_list)))
+    traceplot(mcmc(para$k_list))
+    #return(para$Gt==Gt)
     return(para)
 }
 
