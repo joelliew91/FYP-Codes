@@ -2,12 +2,18 @@ library(Bessel)
 
 source('~/Desktop/FYP/Codes/new/prior.R')
 
-posterior<-function(yt,yu,x,delta,z,v,vt,vu,w,set){
-    val1 = prior_svvg(x,prior)  # log form
+posterior<-function(x,yt,yu,delta,z,v,vt,vu,w,set){
+
+    val1 = prior_svvg(x)  # log form
+    #print(val1)
     val2 = sum(variance_gamma(z,x,delta))    # log form
+    #print(val2)
     val3 = sum(post_vt(vt,vu,x,delta))   # log form
+    #print(val3)
     val4 = sum(log(aux_g(v,w,x,delta,vt,vu,set)))
+    #print(val4)
     val5 = sum(likelihood(yt,yu,x,delta,z,v,vt,vu))
+    #print(val5)
     return(val1+val2+val3+val4+val5)
 }
 
@@ -15,7 +21,10 @@ likelihood<-function(yt,yu,x,delta,z,v,vt,vu){
     v_bar = (vt-vu-x$k*x$v*delta+x$k*v)/x$sigma_v
     mn = yu+x$mu*delta+z+x$rho*v_bar
     dev = (1-x$rho^2)*v
+
     val = dnorm(yt,mean = mn,sd = sqrt(dev),log=T)
+    
+    return(val)
 }
 
 variance_gamma<-function(z,x,delta){
@@ -32,25 +41,28 @@ variance_gamma<-function(z,x,delta){
 
 post_vt<-function(vt,vu,x,delta){
 	d = 4*x$k*x$v/x$sigma_v^2
-	val1 = x$sigma_v^2*(1-exp(-x$k*delta))/(4*ex$k)
+	val1 = x$sigma_v^2*(1-exp(-x$k*delta))/(4*x$k)
 	tau = 4*x$k*exp(x$k*delta)*vu/(x$sigma_v^2*(1-exp(-x$k*delta)))
 	return(dchisq(vt,df=d,ncp = tau,log=T)+log(val1))
 }
 
 aux_g<-function(v,w,x,delta,vt,vu,set){
-    I_c = 1
-    I = 0
-    if(v<set$max_v)
-        if(v>set$min_v)
-            if(w<set$max_w)
-                if(w>set$min_w){
-                    I = 1
-                    I_c = 0
-                }
+    n = length(v)
+    I_c = rep(1,n)
+    I = rep(0,n)
+    for(i in 1:n)
+        if(v[i]<set$max_v)
+            if(v[i]>set$min_v)
+                if(v[i]<set$max_w)
+                    if(v[i]>set$min_w){
+                        I[i]= 1
+                        I_c[i]= 0
+                    }
                 
     temp = phi(w,x,delta,vt,vu)
     g = cos(v*w)*Re(temp)+sin(v*w)*Im(temp)
     p = abs(g)*I+abs(g)*exp(-v-w)*I_c
+    #print(p)
     return(p)
 }
 
@@ -61,6 +73,11 @@ phi<-function(y,x,delta,vt,vu){
     val2 = exp((vu+vt)/x$sigma_v^2*(x$k*(1+exp(-x$k*delta))/(1-exp(-x$k*delta))-nu*(1+exp(-nu*delta))/(1-exp(-nu*delta))))
     v1 = sqrt(vt*vu)*4*nu*exp(-0.5*nu*delta)/(x$sigma_v^2*(1-exp(-nu*delta)))
     v2 = sqrt(vt*vu)*4*x$k*exp(-0.5*x$k*delta)/(x$sigma_v^2*(1-exp(-x$k*delta)))
-    val3 = besselI(v1,nu=0.5*d-1)/besselI(v2,nu=0.5*d-1)
+    val3 = BesselI(v1,nu=0.5*d-1)/BesselI(v2,nu=0.5*d-1)
     return(val1*val2*val3)
 }
+
+
+
+
+
