@@ -97,12 +97,16 @@ normrwmetrop_sigma_v<-function(logf,proposal,x,...){
     val = x
     u =sqrt(2*x$k*x$v)
     log_prev = logf(x,...)+log(x$sigma_v*(u-x$sigma_v)/u)
+    #print(log_prev)
     std = proposal$sd
     s = proposal$scale
     x$sigma_v = exp(log(x$sigma_v/(u-x$sigma_v))+ rnorm(1)*s*std)
     x$sigma_v = x$sigma_v*u/(x$sigma_v+1)
-    R = exp(logf(x,...)-log_prev+log(x$sigma_v*(u-x$sigma_v)/u))
-    
+    #print(x)
+    new = logf(x,...)
+    #print('hit')
+    R = exp(new-log_prev+log(x$sigma_v*(u-x$sigma_v)/u))
+    #print(R)
     if (is.na(R) == FALSE)
     if(R>runif(1))
     val = x
@@ -110,6 +114,18 @@ normrwmetrop_sigma_v<-function(logf,proposal,x,...){
     return(val)
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

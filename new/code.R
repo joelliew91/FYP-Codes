@@ -29,35 +29,61 @@ mcmc_para<-function(data,delta=1,iterations){
     w = rep(1,n*delta)
     
     x = list(mu=mu,k=k,theta=theta,sigma_v=sigma_v,rho=rho,gamma=gamma,sigma_j=sigma_j,v=v_p)
+    
     u1 = sigma_v^2/(2*v_p)
     u2 = sigma_v^2/(2*k)
     u3 = sqrt(2*k*v_p)
-
+    z_list = t(as.matrix(z))
+    w_list = t(as.matrix(w))
+    v_list = t(as.matrix(vt))
+    vs_list = t(as.matrix(v_star))
     for(i in 1:iterations){
+        #print(z)
+        print('mu')
         mu[i+1] = update_mu(mu,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$mu
         x$mu = mu[i+1]
-        
+        print('gam')
         gamma[i+1] = update_gamma(gamma,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$gamma
         x$gamma = gamma[i+1]
         
+        print('sigma_j')
         sigma_j[i+1] = update_sigma_j(sigma_j,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$sigma_j
         x$sigma_j = sigma_j[i+1]
         
+        print('rho')
         rho[i+1] = update_rho(rho,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$rho
         x$rho = rho[i+1]
         
+        print('k')
         k[i+1] = update_k(u1,k,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$k
         x$k = k[i+1]
         
+        print('v_p')
         v_p[i+1] = update_v(u2,v_p,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$v
         x$v = v_p[i+1]
         
+        print('sigma_v')
         sigma_v[i+1] = update_sigma_v(u3,sigma_v,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)$sigma_v
         x$sigma_v = sigma_v[i+1]
+        
+        print('z')
+        z[2:n] = update_z(z_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
+        z_list = rbind(z_list,z)
+        print('v')
+        vt = update_vt(v_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt,w[2:n],set)
+        v_list = rbind(v_list,vt)
+        print('v_star')
+        v_star[2:n] = update_vs(w_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
+        vs_list = rbind(vs_list,v_star)
+        #print('w')
+        #w[2:n] = update_w(w_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
+        #w_list = rbind(w_list,w)
+        print('end latent')
         
         u1[i+1] = x$sigma_v^2/(2*x$v)
         u2[i+1] = x$sigma_v^2/(2*x$k)
         u3[i+1] = sqrt(2*x$k*x$v)
+        print(i)
     }
 
     print(rejectionRate(mcmc(mu)))
@@ -67,7 +93,8 @@ mcmc_para<-function(data,delta=1,iterations){
     print(rejectionRate((mcmc(k))))
     print(rejectionRate(mcmc(v_p)))
     print(rejectionRate(mcmc(sigma_v)))
-    return(list(gamma=gamma,mu=mu,sigma_j=sigma_j,rho=rho,k=k,v=v_p,sigma_v= sigma_v))
+    #return(list(gamma=gamma,mu=mu,sigma_j=sigma_j,rho=rho,k=k,v=v_p,sigma_v= sigma_v))
+    return(vs_list)
 }
 
 
