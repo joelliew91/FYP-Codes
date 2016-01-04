@@ -97,12 +97,12 @@ update_w<-function(w_list,x,yt,yu,delta,z,v,vt,vu,w,set){
         if(is.na(std)||std==0)
             std = 1
         #print('log_prev')
-        log_prev = posterior_latent_w(x,yt[i-1],yu[i-1],delta,z[i-1],v[i-1],vt[i-1],vu[i-1],w[i-1],set)+log(w[i-1])
+        log_prev = posterior(x,yt[i-1],yu[i-1],delta,z[i-1],v[i-1],vt[i-1],vu[i-1],w[i-1],set)+log(w[i-1])
         old = w[i-1]
         new = exp(log(w[i-1]) + rnorm(1)*s*std)
         w[i-1] = new
         #print('new')
-        R = exp(posterior_latent_w(x,yt[i-1],yu[i-1],delta,z[i-1],v[i-1],vt[i-1],vu[i-1],w[i-1],set)-log_prev+log(w[i-1]))
+        R = exp(posterior(x,yt[i-1],yu[i-1],delta,z[i-1],v[i-1],vt[i-1],vu[i-1],w[i-1],set)-log_prev+log(w[i-1]))
         w[i-1] = old
         if (is.na(R) == FALSE)
         if(R>runif(1))

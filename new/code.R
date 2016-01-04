@@ -15,7 +15,7 @@ mcmc_para<-function(data,delta=1,iterations){
 
     mu = rnorm(1,mean = 0,sd = 1)
     gamma = rnorm(1,mean = 0,sd=1)
-    set = list(max_v = 10000,min_v = 0,max_w = 10000,min_w = 0)
+    set = list(max_v = 15000,min_v = 0,max_w = 15000,min_w = 0)
     sigma_j = rgamma(1,1,1)
     k = 5
     theta = abs(rnorm(1))
@@ -26,7 +26,7 @@ mcmc_para<-function(data,delta=1,iterations){
     vt = rep(1,n*delta) # latent variable
     v_star = rep(1,n*delta) # latent variable
     z = rgamma(n*delta,1,1)    # latent variable
-    w = rep(1,n*delta)
+    w = rep(10000,n*delta)
     
     x = list(mu=mu,k=k,theta=theta,sigma_v=sigma_v,rho=rho,gamma=gamma,sigma_j=sigma_j,v=v_p)
     
@@ -73,11 +73,11 @@ mcmc_para<-function(data,delta=1,iterations){
         vt = update_vt(v_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt,w[2:n],set)
         v_list = rbind(v_list,vt)
         print('v_star')
-        v_star[2:n] = update_vs(w_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
+        v_star[2:n] = update_vs(vs_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
         vs_list = rbind(vs_list,v_star)
-        #print('w')
-        #w[2:n] = update_w(w_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
-        #w_list = rbind(w_list,w)
+        print('w')
+        w[2:n] = update_w(w_list,x,data[2:n],data[1:n-1],delta,z[2:n],v_star[2:n],vt[2:n],vt[1:n-1],w[2:n],set)
+        w_list = rbind(w_list,w)
         print('end latent')
         
         u1[i+1] = x$sigma_v^2/(2*x$v)
@@ -94,7 +94,7 @@ mcmc_para<-function(data,delta=1,iterations){
     print(rejectionRate(mcmc(v_p)))
     print(rejectionRate(mcmc(sigma_v)))
     #return(list(gamma=gamma,mu=mu,sigma_j=sigma_j,rho=rho,k=k,v=v_p,sigma_v= sigma_v))
-    return(vs_list)
+    return(w_list)
 }
 
 
