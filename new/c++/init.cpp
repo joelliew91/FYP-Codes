@@ -40,6 +40,9 @@ void initialize(){
         
     }
     myfile.close();
+    
+    total = delta*price.size();
+
     v = new double[delta*price.size()];
     v_star = new double[delta*price.size()];
     w = new double[delta*price.size()];
@@ -51,12 +54,12 @@ void initialize(){
         z[i] = 1;
     }
     mu_h.push_back(mu);
-    sigma_j_h.push_back(sigma_j);
+    sigma_j_h.push_back(log(sigma_j));
     theta_h.push_back(theta);
-    k_h.push_back(k);
-    v_p_h.push_back(v_p);
-    sigma_v_h.push_back(sigma_v);
-    rho_h.push_back(rho);
+    k_h.push_back(log(k-pow(sigma_v,2)/(2*v_p)));
+    v_p_h.push_back(log(v_p-pow(sigma_v,2)/(2*k)));
+    sigma_v_h.push_back(log(sigma_v/(sqrt(2*k*v_p)-sigma_v)));
+    rho_h.push_back(log((1+rho)/(1-rho)));
     gam_h.push_back(gam);
     return ;
 }
