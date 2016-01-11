@@ -29,10 +29,11 @@ extern int delta;
 extern std::vector<double> price;
 extern double dmax;
 extern int total;
+extern int flag;
 
 void initialize();
-
-double posterior(double z,double vt,double vu,double v_star,double yt,double yu,double w);
+double post_no_prior(double z,double vt,double vu,double v_star,double yt,double yu,double w);
+double posterior();
 double prior();
 double likelihood(double z,double vt,double vu,double v_star,double yt,double yu);
 double variance_gamma(double z);
@@ -62,4 +63,9 @@ void update_latent_v(int iter,double** hist);
 double mean(int iter,double* history);
 double sd(int iter,double* history);
 void accept_latent(double** hist);
+double scaler(std::vector<double> history);
+
+double final_mean(std::vector<double> history,int cutoff);
+double accept_latent(int iter,double* hist);
+double latent_mean(double ** hist);
 #endif

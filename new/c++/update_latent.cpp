@@ -6,6 +6,13 @@
 
 using namespace std;
 
+double latent_mean(double ** hist){
+    double sum = 0;
+    for(int i=1;i<total;i++)
+        for(int j=0;j<iterations;j++)
+            sum += hist[i][j];
+    return sum/(total*iterations);
+}
 void accept_latent(double** hist){
     double max = 0;
     double min =1;
@@ -20,9 +27,20 @@ void accept_latent(double** hist){
         if(rate<min)
             min = rate;
     }
-    cout<<"min: "<<min<<" max: "<<max<<endl;
+    cout<<"min: "<<min<<" max: "<<max<<" ";
     return ;
 }
+
+double accept_latent(int iter,double* hist){
+    int count = 0;
+    if(iter==1) return 0.5;
+    for(int j=1;j<iter-1;j++)
+        if(hist[j] != hist[j-1])
+                count++;
+    double rate = count/(1.0*iter);
+    return rate;
+}
+
 double mean(int iter,double* history){
 
     double sum = 0;
@@ -48,8 +66,12 @@ double sd(int iter,double* history){
 void update_latent_v(int iter,double** hist){
     hist[0][iter] = log(1);
     for(int i=1;i<total-1;i++){
+        flag = 1;
         double std = sd(iter,hist[i]);
         double s = 1.0;
+        //double acc = accept_latent(iter,hist[i]);
+        //if(acc>0.85) s = 5.0;
+        //if(acc<0.15) s = 1/5;
         double old_post = 0;
         double new_post = 0;
         double s1 = uniform(rand());
@@ -57,27 +79,31 @@ void update_latent_v(int iter,double** hist){
         double fac = normal(s1,s2);
         double new_temp = exp(log(v[i]) + fac*s*std);
         double temp = v[i];
-        //cout<<new_temp<<endl;
-        double upper = 2;
-        if(i==total-1) upper = 1;
+        bool bad = false;
         if(i != total-1){
-            old_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+posterior(z[i+1],v[i+1],v[i],v_star[i+1],price[i+1],price[i],w[i+1]);
+            old_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+post_no_prior(z[i+1],v[i+1],v[i],v_star[i+1],price[i+1],price[i],w[i+1]);
             v[i] = new_temp;
-            new_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+posterior(z[i+1],v[i+1],v[i],v_star[i+1],price[i+1],price[i],w[i+1]);
+            new_post += post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
+            new_post += post_no_prior(z[i+1],v[i+1],v[i],v_star[i+1],price[i+1],price[i],w[i+1]);
+            if(!flag) bad = true;
             v[i] = temp;
         }
         else{
-            old_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
+            old_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
             v[i] = new_temp;
-            new_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
+            new_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
             v[i] = temp;
+            if(!flag) bad = true;
         }
-        //cout<<new_post<<endl;
+        
         double u = rand()%1000/(1.0*1000);
         double log_R = new_post-old_post+log(new_temp)-log(temp);
         if(log_R>log(u))
-            v[i] = new_temp;
+            if(!bad)
+                if(flag)
+                    v[i] = new_temp;
         hist[i][iter] = log(v[i]);
+        bad = false;
     }
     
     
@@ -87,26 +113,30 @@ void update_latent_v(int iter,double** hist){
 void update_latent_v_s(int iter,double** hist){
     hist[0][iter] = log(1);
     for(int i=1;i<total;i++){
+        flag = 1;
         double std = sd(iter,hist[i]);
         double s = 1.0;
-        double old_post = 0;
-        double new_post = 0;
+        //double acc = accept_latent(iter,hist[i]);
+        //if(acc>0.85) s = 5.0;
+        //if(acc<0.15) s = 1/5;
         double s1 = uniform(rand());
         double s2 = uniform(rand());
         double fac = normal(s1,s2);
         double new_temp = exp(log(v_star[i]) + fac*s*std);
         double temp = v_star[i];
-        //cout<<new_temp<<endl;
-        old_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(temp);
+
+        double old_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(temp);
         v_star[i] = new_temp;
-        new_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(new_temp);
+        double new_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(new_temp);
         v_star[i] = temp;
-        
+
         double u = rand()%1000/(1.0*1000);
         double R = exp(new_post-old_post);
         if(R>u)
-            v_star[i] = new_temp;
+            if(flag)
+                v_star[i] = new_temp;
         hist[i][iter] = log(v_star[i]);
+        flag = 1;
     }
     
     return ;
@@ -115,25 +145,30 @@ void update_latent_v_s(int iter,double** hist){
 void update_latent_w(int iter,double** hist){
     hist[0][iter] = log(1);
     for(int i=1;i<total;i++){
+        flag = 1;
         double std = sd(iter,hist[i]);
         double s = 1.0;
-        double old_post = 0;
-        double new_post = 0;
+        //double acc = accept_latent(iter,hist[i]);
+        //if(acc>0.85) s = 5.0;
+        //if(acc<0.15) s = 1/5;
+
         double s1 = uniform(rand());
         double s2 = uniform(rand());
         double fac = normal(s1,s2);
         double new_temp = exp(log(w[i]) + fac*s*std);
         double temp = w[i];
-        old_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(temp);
+        double old_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(temp);
         w[i] = new_temp;
-        new_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(new_temp);
+        double new_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i])+log(new_temp);
         w[i] = temp;
         
         double u = rand()%1000/(1.0*1000);
         double R = exp(new_post-old_post);
         if(R>u)
-            w[i] = new_temp;
+            if(flag)
+                w[i] = new_temp;
         hist[i][iter] = log(w[i]);
+        flag = 1;
     }
     
     return ;
@@ -142,25 +177,28 @@ void update_latent_w(int iter,double** hist){
 void update_latent_z(int iter,double** hist){
     hist[0][iter] = 1;
     for(int i=1;i<total;i++){
+        flag = 1;
         double std = sd(iter,hist[i]);
         double s = 1.0;
-        double old_post = 0;
-        double new_post = 0;
+        //double acc = accept_latent(iter,hist[i]);
+        //if(acc>0.85) s = 5.0;
+        //if(acc<0.15) s = 1/5;
         double s1 = uniform(rand());
         double s2 = uniform(rand());
         double fac = normal(s1,s2);
         double new_temp = z[i] + fac*s*std;
         double temp = z[i];
-        old_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
+        double old_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
         z[i] = new_temp;
-        new_post = posterior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
+        double new_post = post_no_prior(z[i],v[i],v[i-1],v_star[i],price[i],price[i-1],w[i]);
         z[i] = temp;
-
         double u = rand()%1000/(1.0*1000);
         double R = exp(new_post-old_post);
         if(R>u)
-            z[i] = new_temp;
+            if(flag)
+                z[i] = new_temp;
         hist[i][iter]=z[i];
+        flag = 1;
     }
 
     return ;

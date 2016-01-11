@@ -25,7 +25,8 @@ double max_w;
 double min_v;
 double min_w;
 double dmax = 2;
-int iterations=100;
+int flag = 1;
+int iterations=50000;
 int delta=1;
 vector<double> price;
 int total;
@@ -36,7 +37,8 @@ int main(){
     srand(time(0));
 
     initialize();
-    
+    //complex<double> temp(-100000,-100000);
+    //cout<<sp_bessel::besselI(10000000000,temp)<<endl;
     double ** latent_z = new double *[total];
     double ** latent_w = new double *[total];
     double ** latent_v = new double *[total];
@@ -83,17 +85,17 @@ int main(){
         cout<<i+1<<endl;
     }
     
-    cout<<"mu: "<<accept(mu_h)<<endl;
-    cout<<"gam: "<<accept(gam_h)<<endl;
-    cout<<"sigma_j: "<<accept(sigma_j_h)<<endl;
-    cout<<"rho: "<<accept(rho_h)<<endl;
-    cout<<"k: "<<accept(k_h)<<endl;
-    cout<<"v_p: "<<accept(v_p_h)<<endl;
-    cout<<"sigma_v: "<<accept(sigma_v_h)<<endl;
-    accept_latent(latent_w);
-    accept_latent(latent_z);
-    accept_latent(latent_v_star);
-    accept_latent(latent_v);
+    cout<<"mu: "<<accept(mu_h)<<" mean: "<<final_mean(mu_h,30000)<<endl;
+    cout<<"gam: "<<accept(gam_h)<<" mean: "<<final_mean(gam_h,30000)<<endl;
+    cout<<"sigma_j: "<<accept(sigma_j_h)<<" mean: "<<final_mean(sigma_j_h,30000)<<endl;
+    cout<<"rho: "<<accept(rho_h)<<" mean: "<<final_mean(rho_h,30000)<<endl;
+    cout<<"k: "<<accept(k_h)<<" mean: "<<final_mean(k_h,30000)<<endl;
+    cout<<"v_p: "<<accept(v_p_h)<<" mean: "<<final_mean(v_p_h,30000)<<endl;
+    cout<<"sigma_v: "<<accept(sigma_v_h)<<" mean: "<<final_mean(sigma_v_h,30000)<<endl;
+    cout<<"lat_w ";accept_latent(latent_w);cout<<latent_mean(latent_w)<<endl;
+    cout<<"lat_z ";accept_latent(latent_z);cout<<latent_mean(latent_z)<<endl;
+    cout<<"lat_vs ";accept_latent(latent_v_star);cout<<latent_mean(latent_v_star)<<endl;
+    cout<<"lat_v ";accept_latent(latent_v);cout<<latent_mean(latent_v)<<endl;
 
 	return(0);
 }
